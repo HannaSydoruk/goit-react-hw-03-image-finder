@@ -1,8 +1,19 @@
 import { Component } from 'react';
 import css from './Loader.module.css';
+import { Audio } from 'react-loader-spinner';
 
 export default class Loader extends Component {
   render() {
-    return <p>Loading</p>;
+    return (
+      <Audio
+        height="80"
+        width="80"
+        radius="9"
+        color="green"
+        ariaLabel="loading"
+        wrapperStyle
+        wrapperClass
+      />
+    );
   }
 }
