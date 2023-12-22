@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import css from './Searchbar.module.css';
+import { ReactComponent as IconButton } from '../../icons/search-svgrepo-com.svg';
 
 export default class Searchbar extends Component {
   onSubmitHandler = e => {
@@ -13,7 +14,9 @@ export default class Searchbar extends Component {
     return (
       <header className={css.searchbar}>
         <form onSubmit={this.onSubmitHandler} className={css.form}>
-          <button type="submit" className={css.button}></button>
+          <button type="submit" className={css.button}>
+            <IconButton width="15" height="15" />
+          </button>
 
           <input
             className={css.input}
