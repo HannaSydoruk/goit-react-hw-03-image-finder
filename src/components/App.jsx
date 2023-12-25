@@ -9,13 +9,14 @@ import Modal from './Modal/Modal';
 
 export class App extends Component {
   state = {
-    images: null,
+    images: [],
     largeImage: '',
     status: 'idle',
     searchValue: '',
     currentPage: 1,
     error: null,
     showModal: false,
+    total: 0,
   };
 
   toggleModal = () => {
@@ -24,50 +25,48 @@ export class App extends Component {
     }));
   };
 
-  onSearchSubmit = async formData => {
-    try {
-      this.setState({ status: 'pending' });
-      const data = await Api.getImages(formData.searchValue);
-      const images = data.hits.map(hit => {
-        return {
-          id: hit.id,
-          smallImage: hit.webformatURL,
-          largeImage: hit.largeImageURL,
-        };
-      });
-      this.setState({
-        images: images,
-        searchValue: formData.searchValue,
-        currentPage: 1,
-        status: 'success',
-      });
-    } catch (error) {
-      this.setState({ error: error.message, status: 'error' });
+  componentDidUpdate = async (_, prevState) => {
+    if (
+      prevState.searchValue !== this.state.searchValue ||
+      prevState.currentPage !== this.state.currentPage
+    ) {
+      try {
+        this.setState({ status: 'pending' });
+        const data = await Api.getImages(
+          this.state.searchValue,
+          this.state.currentPage
+        );
+        const images = data.hits.map(hit => {
+          return {
+            id: hit.id,
+            smallImage: hit.webformatURL,
+            largeImage: hit.largeImageURL,
+          };
+        });
+        this.setState(prevState => ({
+          images: [...prevState.images, ...images],
+          status: 'success',
+          total: data.total,
+        }));
+      } catch (error) {
+        this.setState({ error: error.message, status: 'error' });
+      }
     }
   };
 
-  onLoadMoreClick = async e => {
-    try {
-      this.setState({ status: 'pending' });
-      const data = await Api.getImages(
-        this.state.searchValue,
-        this.state.currentPage + 1
-      );
-      const images = data.hits.map(hit => {
-        return {
-          id: hit.id,
-          smallImage: hit.webformatURL,
-          largeImage: hit.largeImageURL,
-        };
-      });
-      this.setState({
-        images: [...this.state.images, ...images],
-        currentPage: this.state.currentPage + 1,
-        status: 'success',
-      });
-    } catch (error) {
-      this.setState({ error: error.message, status: 'error' });
+  onSearchSubmit = async formData => {
+    if (formData.searchValue.toLowerCase() === this.state.searchValue) {
+      return alert('The query is the same. Change your query.');
     }
+    this.setState({
+      searchValue: formData.searchValue.toLowerCase(),
+      images: [],
+      currentPage: 1,
+    });
+  };
+
+  onLoadMoreClick = async e => {
+    this.setState(prevState => ({ currentPage: prevState.currentPage + 1 }));
   };
 
   onImageSelected = image => {
@@ -89,9 +88,10 @@ export class App extends Component {
           />
         )}
         {this.state.status === 'pending' && <Loader />}
-        {this.state.images?.length && (
-          <Button onLoadMoreClick={this.onLoadMoreClick} />
-        )}
+        {this.state.images?.length >= 12 &&
+          this.state.images?.length < this.state.total && (
+            <Button onLoadMoreClick={this.onLoadMoreClick} />
+          )}
         {this.state.showModal && (
           <Modal url={this.state.largeImage} onClose={this.toggleModal} />
         )}
